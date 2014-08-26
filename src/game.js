@@ -341,7 +341,7 @@ var GameLayer = cc.LayerColor.extend({
 			gameLayer.zidan.push(sprite);
 			switch(target.itemType){
 			case ItemType.STONE:
-				sprite.runAction(cc.Sequence.create(cc.RotateBy(1,360)).repeatForever());
+				sprite.runAction(cc.Sequence.create(new cc.RotateBy(1,360)).repeatForever());
 				//sprite.runAction(cc.Sequence.create(cc.RotateBy(1,360)));
 				sprite.runAction(
 						cc.Sequence.create(
@@ -354,7 +354,7 @@ var GameLayer = cc.LayerColor.extend({
 				);
 				break;
 			case ItemType.SHIT:
-				sprite.runAction(cc.Sequence.create(cc.RotateBy(0.5,360)).repeatForever());
+				sprite.runAction(cc.Sequence.create(new cc.RotateBy(0.5,360)).repeatForever());
 				//sprite.runAction(cc.Sequence.create(cc.RotateBy(0.5,360)));
 				sprite.runAction(
 						cc.Sequence.create(
@@ -368,7 +368,7 @@ var GameLayer = cc.LayerColor.extend({
 				break;
 			case ItemType.ROCKET:
 				var a = Math.atan2(powerx, powery) / 2 / Math.PI * 360;
-				sprite.runAction(cc.Sequence.create(cc.RotateTo(0,a)));
+				sprite.runAction(cc.Sequence.create(new cc.RotateTo(0,a)));
 				
 				sprite.runAction(
 						cc.Sequence.create(
@@ -381,7 +381,7 @@ var GameLayer = cc.LayerColor.extend({
 				);
 				break;
 			case ItemType.MUTONG:
-				sprite.runAction(cc.Sequence.create(cc.RotateBy(0.5,360)).repeatForever());
+				sprite.runAction(cc.Sequence.create(new cc.RotateBy(0.5,360)).repeatForever());
 				//sprite.runAction(cc.Sequence.create(cc.RotateBy(0.5,360)));
 				sprite.runAction(
 						cc.Sequence.create(
@@ -394,7 +394,7 @@ var GameLayer = cc.LayerColor.extend({
 				);
 				break;
 			case ItemType.AXE:
-				sprite.runAction(cc.Sequence.create(cc.RotateBy(0.9,360)).repeatForever());
+				sprite.runAction(cc.Sequence.create(new cc.RotateBy(0.9,360)).repeatForever());
 				//sprite.runAction(cc.Sequence.create(cc.RotateBy(0.9,360)));
 				sprite.runAction(
 						cc.Sequence.create(
