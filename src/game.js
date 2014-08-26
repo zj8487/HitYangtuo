@@ -19,6 +19,10 @@ var ItemType = {
 		STONE : 0, //石头
 		SHIT : 1, //便便
 		ROCKET : 2, //火箭
+		MUTONG : 3, //木桶
+		AXE : 4, //斧头
+		
+		MAX : 5
 }
 
 var GameLayer = cc.LayerColor.extend({
@@ -33,6 +37,7 @@ var GameLayer = cc.LayerColor.extend({
 	zidan : new Array(),
 	hitTime : null,
 	hp : 100,
+	caonimaSpeed : 1,
 	ctor:function () {
 		this.s = cc.winSize;
 		var size = cc.winSize;
@@ -119,28 +124,29 @@ var GameLayer = cc.LayerColor.extend({
 		var sprite = null;
 		switch(type){
 		case ItemType.STONE:
-			var tex = cc.textureCache.addImage(res.stoneImage);
-			var rect = cc.rect(0,0,110,110);
-			var frame = new cc.SpriteFrame(tex, rect);
-			sprite = new cc.Sprite(frame);
+			sprite = cc.Sprite.create(res.stoneImage);
 			break;
 		case ItemType.SHIT:
-			var tex = cc.textureCache.addImage(res.shitImage);
-			var rect = cc.rect(0,0,110,110);
-			var frame = new cc.SpriteFrame(tex, rect);
-			sprite = new cc.Sprite(frame);
+			sprite = cc.Sprite.create(res.shitImage);
+			sprite.scale = 0.5;
 			break;
 		case ItemType.ROCKET:
-			var tex = cc.textureCache.addImage(res.rocketImage);
-			var rect = cc.rect(0,0,55,110);
-			var frame = new cc.SpriteFrame(tex, rect);
-			sprite = new cc.Sprite(frame);
+			sprite = cc.Sprite.create(res.rocketImage);
+			sprite.scale = 0.5;
+			break;
+		case ItemType.MUTONG:
+			sprite = cc.Sprite.create(res.mutongImage);
+			break;
+		case ItemType.AXE:
+			sprite = cc.Sprite.create(res.axeImage);
 			break;
 		default:
 			cc.log("error ! invalid item type: " + type);
 			break;
 		}
 		sprite.itemType = type;
+		sprite.anchorX = 0.5;
+		sprite.anchorY = 0.5;
 		return sprite;
 	},
 	
@@ -171,8 +177,30 @@ var GameLayer = cc.LayerColor.extend({
 					
 					if(cc.rectIntersectsRect(zidanBox, caonimaBox)){
 						cc.log("hit!");
-						gameLayer.hp -= 15;
-						cc.log(gameLayer.hp);
+						switch(zidan.itemType){
+						case ItemType.STONE:
+							gameLayer.hp -= 15;
+							break;
+						case ItemType.SHIT:
+							gameLayer.hp -= 5;
+							gameLayer.caonimaSpeed *= 0.7;
+							break;
+						case ItemType.ROCKET:
+							gameLayer.hp -= 25;
+							break;
+						case ItemType.MUTONG:
+							gameLayer.hp -= 18;
+							break;
+						case ItemType.AXE:
+							gameLayer.hp -= 30;
+							gameLayer.caonimaSpeed *= 1.5;
+							break;
+						default:
+							cc.log("invalid item type:" + zidan.itemType);
+							break;
+						}
+						
+						//cc.log(gameLayer.hp);
 						zidan.alive = false;
 						gameLayer.removeChild(zidan);
 						if(gameLayer.hp<=0){
@@ -189,7 +217,7 @@ var GameLayer = cc.LayerColor.extend({
 			gameLayer.zidan = newZidan;
 			
 			//add item
-			if(gameLayer.timeCountTemp - gameLayer.hitTime > 50 && gameLayer.items.length == 0){
+			if(gameLayer.timeCountTemp - gameLayer.hitTime > 40 && gameLayer.items.length == 0){
 				gameLayer.addItems();
 			}
 		}
@@ -206,6 +234,7 @@ var GameLayer = cc.LayerColor.extend({
 			this.zidan[i].alive = false;
 		}
 		this.hp = 100;
+		this.caonimaSpeed = 1;
 		this.addItems();
 	},
 	gameOver:function(){
@@ -227,7 +256,7 @@ var GameLayer = cc.LayerColor.extend({
 		var targetY = cc.random0To1() * (480 - 100) + 100;
 		if(targetY > 360) targetY = 360;
 		//cc.log("x=" + targetX + ", y=" + targetY);
-		var randomSpeed = CAONIMA_SPEED + cc.random0To1() * 100;
+		var randomSpeed = (CAONIMA_SPEED + cc.random0To1() * 50) * gameLayer.caonimaSpeed;
 		var time = cc.pDistance(cc.p(x,y), cc.p(targetX, targetY)) / randomSpeed;
 		var action = cc.Sequence.create(
 				cc.MoveTo.create(time, cc.p(targetX, targetY)),
@@ -247,16 +276,15 @@ var GameLayer = cc.LayerColor.extend({
 		this.clearItems();
 		
 		for(var i=0;i<5;i++){
-			var randomItem = Math.floor(cc.random0To1() * 2 + 0.5);
+			var randomItem = Math.floor(cc.random0To1() * ItemType.MAX);
 			var sprite = this.generateSprite(randomItem);
 			sprite.attr({
 				x: 40 + i * 60,
 				y: 0,
-				scale: 0.5,
 			});
 			
 			this.items.push(sprite);
-			var action = cc.MoveBy.create(0.3, cc.p(0,60)).easing(cc.easeIn(2));
+			var action = cc.MoveBy.create(0.1, cc.p(0,60)).easing(cc.easeIn(0.5));
 			sprite.runAction(action);
 			this.addChild(sprite, 0);
 			
@@ -283,9 +311,6 @@ var GameLayer = cc.LayerColor.extend({
 	onTouchMoved:function(touch, event){
 		var target = event.getCurrentTarget();
 		var delta = touch.getDelta();
-		//target.x += delta.x;
-		//target.y += delta.y;
-		//cc.log(delta.y);
 		return true;
 	},
 	onTouchEnded:function(touch, event){
@@ -293,12 +318,14 @@ var GameLayer = cc.LayerColor.extend({
 		var target = event.getCurrentTarget(); 
 		var locationInNode = target.convertToNodeSpace(touch.getLocation());    
 		if(locationInNode.y > 30){
-			var MAXPOWER = 130;
+			var MAXPOWER = 200;
 			//发射
 			var powerx = locationInNode.x;
 			var powery = locationInNode.y;
-			if(powerx > MAXPOWER) powerx = MAXPOWER;
-			if(powery > MAXPOWER) powery = MAXPOWER;
+			if(powery > MAXPOWER) {
+				powery = MAXPOWER;
+				powerx = locationInNode.x / locationInNode.y * MAXPOWER;
+			}
 			gameLayer.hitTime = gameLayer.timeCountTemp;
 			
 			var sprite = gameLayer.generateSprite(target.itemType);
@@ -306,24 +333,82 @@ var GameLayer = cc.LayerColor.extend({
 			//if(target.itemType == ItemType.STONE){
 				sprite.attr({
 					x: target.x,
-					y: target.y,
-					scale: 0.5,
+					y: target.y,					
 				});
 				sprite.alive = true;
 			//}
 			
 			gameLayer.zidan.push(sprite);
-			sprite.runAction(
-				cc.Sequence.create(
-					cc.MoveBy.create(powery / 50, cc.p(powerx * 3, powery * 3)).easing(cc.easeOut(2.0)), 
-					cc.FadeOut.create(0.3),
-					cc.CallFunc.create(function() { 
-						sprite.alive = false;
-					})
-				)
-			);
-			gameLayer.addChild(sprite, 0);
+			switch(target.itemType){
+			case ItemType.STONE:
+				sprite.runAction(cc.Sequence.create(cc.RotateBy(1,360)).repeatForever());
+				sprite.runAction(
+						cc.Sequence.create(
+								cc.MoveBy.create(powery / 50, cc.p(powerx * 2, powery * 2)).easing(cc.easeOut(2.0)),
+								cc.FadeOut.create(0.3),
+								cc.CallFunc.create(function() { 
+									sprite.alive = false;
+								})
+						)
+				);
+				break;
+			case ItemType.SHIT:
+				sprite.runAction(cc.Sequence.create(cc.RotateBy(0.5,360)).repeatForever());
+				sprite.runAction(
+						cc.Sequence.create(
+								cc.MoveBy.create(powery / 100, cc.p(powerx * 2, powery * 2)),
+								cc.FadeOut.create(0.3),
+								cc.CallFunc.create(function() { 
+									sprite.alive = false;
+								})
+						)
+				);
+				break;
+			case ItemType.ROCKET:
+				var a = Math.atan2(powerx, powery) / 2 / Math.PI * 360;
+				sprite.runAction(
+						cc.RotateTo(0,a)
+						);
+				
+				sprite.runAction(
+						cc.Sequence.create(
+								cc.MoveBy.create(powery / 60, cc.p(powerx * 3, powery * 3)).easing(cc.easeIn(2.0)),
+								cc.FadeOut.create(0.3),
+								cc.CallFunc.create(function() { 
+									sprite.alive = false;
+								})
+						)
+				);
+				break;
+			case ItemType.MUTONG:
+				sprite.runAction(cc.Sequence.create(cc.RotateBy(0.5,360)).repeatForever());
+				sprite.runAction(
+						cc.Sequence.create(
+								cc.MoveBy.create(powery / 70, cc.p(powerx * 2, powery * 2)),
+								cc.FadeOut.create(0.3),
+								cc.CallFunc.create(function() { 
+									sprite.alive = false;
+								})
+						)
+				);
+				break;
+			case ItemType.AXE:
+				sprite.runAction(cc.Sequence.create(cc.RotateBy(0.9,360)).repeatForever());
+				sprite.runAction(
+						cc.Sequence.create(
+								cc.MoveBy.create(powery / 100, cc.p(powerx * 2, powery * 2)),
+								cc.FadeOut.create(0.3),
+								cc.CallFunc.create(function() { 
+									sprite.alive = false;
+								})
+						)
+				);
+				break;
+			default:
+				break;
+			}
 			
+			gameLayer.addChild(sprite, 0);
 			gameLayer.clearItems();
 		}else{
 			target.y -= 15;

@@ -21,9 +21,11 @@ var res = {
     background : "res/new/background.jpg",
     notifyButton: "res/new/notify.png",
     
-    stoneImage : "res/new2/shitou110-110-4.png",
-    shitImage : "res/new2/bianbian110-110-2.png",
-    rocketImage : "res/new2/daodan110-55-3.png"
+    stoneImage : "res/new2/shitou-40-40.png",
+    shitImage : "res/new2/bianbian-40-40.png",
+    rocketImage : "res/new2/huojian-80-40.png",
+    mutongImage : "res/new2/mutong-40-40.png",
+    axeImage : "res/new2/futou-40-40.png"
 };
 
 var g_resources = [];
