@@ -62,22 +62,32 @@ var GameLayer = cc.LayerColor.extend({
 		var tex = cc.textureCache.addImage(res.yangtuo);
 		var frame,
 		rect = cc.rect(0, 0, PLAYER_W, PLAYER_H),
-		moving_frames = [], trapped_frames = [];
+		moving_frames = [], trapped_frames = [], hit_frames = [];
 		for (var i = 0; i < 6; i++) {
 			rect.x = PLAYER_OX + i * PLAYER_W;
 			frame = new cc.SpriteFrame(tex, rect);
 			trapped_frames.push(frame);
 		}
 		rect.y = MOVING_OY;
-		for (var i = 0; i < 4; i++) {
+		for (var i = 0; i < 5; i++) {
 			rect.x = PLAYER_OX + i * PLAYER_W;
 			frame = new cc.SpriteFrame(tex, rect);
-			moving_frames.push(frame);
+			if(i<4){
+				moving_frames.push(frame);
+			}else{
+				hit_frames.push(frame);
+			}
 		}
-		var moving_animation = new cc.Animation(moving_frames, 0.2);
+		
+		
+		
+		var moving_animation = new cc.Animation(moving_frames, 0.4);
 		this.moving_action = cc.animate(moving_animation).repeatForever();
 		var trapped_animation = new cc.Animation(trapped_frames, 0.2);
 		this.trapped_action = cc.animate(trapped_animation).repeatForever();
+		var hit_animation = new cc.Animation(hit_frames, 0.8);
+		this.hit_action = cc.animate(hit_animation).repeatForever();
+		
 		this.caonima = new cc.Sprite(moving_frames[0]);
 
 		this.caonima.attr({
@@ -89,7 +99,6 @@ var GameLayer = cc.LayerColor.extend({
 		});
 		this.caonima.stopAllActions();
 		this.caonima.runAction(this.trapped_action);
-
 		this.addChild(this.caonima,2);
 		
 		//time bar
@@ -128,7 +137,7 @@ var GameLayer = cc.LayerColor.extend({
 			break;
 		case ItemType.SHIT:
 			sprite = cc.Sprite.create(res.shitImage);
-			sprite.scale = 0.5;
+			sprite.scale = 0.8;
 			break;
 		case ItemType.ROCKET:
 			sprite = cc.Sprite.create(res.rocketImage);
@@ -177,6 +186,9 @@ var GameLayer = cc.LayerColor.extend({
 					
 					if(cc.rectIntersectsRect(zidanBox, caonimaBox)){
 						cc.log("hit!");
+						
+						//gameLayer.caonima.stopAction(gameLayer.moving_action);
+						//gameLayer.caonima.runAction(gameLayer.hit_action);
 						switch(zidan.itemType){
 						case ItemType.STONE:
 							gameLayer.hp -= 15;
@@ -282,6 +294,7 @@ var GameLayer = cc.LayerColor.extend({
 				x: 40 + i * 60,
 				y: 0,
 			});
+			sprite.scale *= 1.5;
 			
 			this.items.push(sprite);
 			var action = cc.MoveBy.create(0.1, cc.p(0,60)).easing(cc.easeIn(0.5));
